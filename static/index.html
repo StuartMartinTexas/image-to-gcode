@@ -6,81 +6,100 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      background: url("/static/banner.jpg") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .overlay {
+      background-color: rgba(255, 255, 255, 0.85);
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
       text-align: center;
     }
 
     h2 {
-      margin-top: 10px;
+      margin-top: 0;
+      color: #333;
     }
 
-    #headerImage {
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-      margin-bottom: 15px;
-    }
-
-    img#preview {
-      max-width: 300px;
-      margin: 10px auto;
+    label, input[type="text"], textarea {
       display: block;
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    input[type="file"], input[type="text"] {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
     }
 
     textarea {
-      width: 90%;
       height: 200px;
-      margin-top: 10px;
       font-family: monospace;
-    }
-
-    input[type="text"] {
-      width: 90%;
-      padding: 8px;
-      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
     }
 
     button {
-      margin: 10px 5px;
-      padding: 8px 16px;
+      margin-top: 15px;
+      padding: 10px 20px;
       font-size: 14px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
 
+    button:hover {
+      background-color: #005ea0;
+    }
+
+    #preview {
+      max-width: 100%;
+      margin-top: 15px;
+      display: none;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+
     small {
-      display: block;
-      color: gray;
-      margin-top: -5px;
+      color: #555;
     }
   </style>
 </head>
 <body>
+  <div class="overlay">
+    <h2>Stuart's Smart Board</h2>
+    <p><i>“Improve your artistic abilities with technology”</i></p>
 
-  <img src="/static/banner.jpg" id="headerImage" alt="Smart Board Banner" />
-  <h2>Stuart's Smart Board</h2>
-  <p><i>“Improve your artistic abilities with technology”</i></p>
+    <label for="fileInput">Upload or Take a Photo:</label>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    <small>(Use your camera or select an image)</small>
 
-  <!-- Upload or Capture -->
-  <label for="fileInput">Upload or Take a Photo:</label><br>
-  <input type="file" id="fileInput" accept="image/*" capture="environment"><br>
-  <small>(Choose an image or use your camera)</small><br>
+    <img id="preview" src="#" alt="Image Preview"><br>
+    <button onclick="removeImage()">Remove Image</button>
 
-  <img id="preview" src="#" alt="Image Preview" style="display:none;"><br>
-  <button onclick="removeImage()">Remove Image</button><br>
+    <label for="aiPrompt">Enhancement Prompt:</label>
+    <input type="text" id="aiPrompt" placeholder="e.g. cleaner lines, cartoon style">
 
-  <!-- AI Prompt -->
-  <label for="aiPrompt">Enhancement Prompt:</label><br>
-  <input type="text" id="aiPrompt" placeholder="e.g. redraw as cartoon, cleaner edges"><br>
+    <button onclick="convert()">Convert to G-code</button>
 
-  <!-- Conversion and Output -->
-  <button onclick="convert()">Convert to G-code</button><br>
-  <label for="gcodeOutput">G-code Output:</label><br>
-  <textarea id="gcodeOutput" readonly></textarea><br>
-  <button onclick="sendToESP()">Send to Plotter</button>
+    <label for="gcodeOutput">G-code Output:</label>
+    <textarea id="gcodeOutput" readonly></textarea>
+
+    <button onclick="sendToESP()">Send to Plotter</button>
+  </div>
 
   <script>
-    const ESP_IP = "http://192.168.4.1"; // 🛠️ Replace with actual ESP8266 IP
+    const ESP_IP = "http://192.168.4.1"; // Replace with your actual ESP8266 IP
 
     document.getElementById('fileInput').addEventListener('change', function (event) {
       const reader = new FileReader();
@@ -104,7 +123,7 @@
 
       const form = new FormData();
       form.append('image', file);
-      form.append('prompt', prompt); // 🔄 For future AI-enhanced server support
+      form.append('prompt', prompt);
 
       try {
         const response = await fetch('/process-image', {
