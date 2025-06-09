@@ -80,8 +80,9 @@
     <h2>Stuart's Smart Board</h2>
     <p><i>“Improve your artistic abilities with technology”</i></p>
 
-    <label for="fileInput">Upload or Take a Photo:</label>
-    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    <label for="fileInput">Upload an Image:</label>
+    <input type="file" id="fileInput" accept="image/*"><br>
+    <button onclick="triggerCamera()">Take a Picture</button>
     <small>(Use your camera or select an image)</small>
 
     <img id="preview" src="#" alt="Image Preview"><br>
@@ -89,6 +90,7 @@
 
     <label for="aiPrompt">Enhancement Prompt:</label>
     <input type="text" id="aiPrompt" placeholder="e.g. cleaner lines, cartoon style">
+    <button onclick="applyEnhancement()">Enhance with AI</button>
 
     <button onclick="convert()">Convert to G-code</button>
 
@@ -112,6 +114,56 @@
         reader.readAsDataURL(event.target.files[0]);
       }
     });
+
+    function triggerCamera() {
+      const tempInput = document.createElement('input');
+      tempInput.type = 'file';
+      tempInput.accept = 'image/*';
+      tempInput.capture = 'environment';
+      tempInput.onchange = function (event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const img = document.getElementById('preview');
+          img.src = reader.result;
+          img.style.display = 'block';
+        };
+        if (event.target.files[0]) {
+          reader.readAsDataURL(event.target.files[0]);
+        }
+      };
+      tempInput.click();
+    }
+
+    async function applyEnhancement() {
+      const file = document.getElementById('fileInput').files[0];
+      const prompt = document.getElementById('aiPrompt').value;
+      if (!file || !prompt.trim()) {
+        alert("Please select an image and enter a prompt.");
+        return;
+      }
+
+      const form = new FormData();
+      form.append('image', file);
+      form.append('prompt', prompt);
+
+      try {
+        const response = await fetch('/enhance-image', {
+          method: 'POST',
+          body: form
+        });
+
+        if (!response.ok) throw new Error("Enhancement failed.");
+        const blob = await response.blob();
+
+        const preview = document.getElementById('preview');
+        preview.src = URL.createObjectURL(blob);
+        preview.style.display = 'block';
+
+        alert("Image enhanced. Now you can convert it to G-code.");
+      } catch (err) {
+        alert("AI enhancement failed.");
+      }
+    }
 
     async function convert() {
       const file = document.getElementById('fileInput').files[0];
