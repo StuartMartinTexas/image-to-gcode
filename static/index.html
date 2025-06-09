@@ -47,7 +47,7 @@
       border-radius: 5px;
     }
 
-    button {
+    button, .custom-button {
       margin-top: 15px;
       padding: 10px 20px;
       font-size: 14px;
@@ -56,9 +56,10 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      display: inline-block;
     }
 
-    button:hover {
+    button:hover, .custom-button:hover {
       background-color: #005ea0;
     }
 
@@ -68,6 +69,15 @@
       display: none;
       border: 1px solid #aaa;
       border-radius: 5px;
+    }
+
+    .button-label {
+      display: inline-block;
+      margin-top: 15px;
+    }
+
+    .button-label input {
+      display: none;
     }
 
     small {
@@ -80,18 +90,21 @@
     <h2>Stuart's Smart Board</h2>
     <p><i>“Improve your artistic abilities with technology”</i></p>
 
-    <label for="fileInput">Upload an Image:</label>
-    <input type="file" id="fileInput" accept="image/*"><br>
+    <label for="fileInput">Upload an Image:</label><br>
+    <label class="button-label">
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <span class="custom-button">Choose File</span>
+    </label>
+
     <button onclick="triggerCamera()">Take a Picture</button>
-    <small>(Use your camera or select an image)</small>
 
     <img id="preview" src="#" alt="Image Preview"><br>
     <button onclick="removeImage()">Remove Image</button>
 
     <label for="aiPrompt">Enhancement Prompt:</label>
     <input type="text" id="aiPrompt" placeholder="e.g. cleaner lines, cartoon style">
-    <button onclick="applyEnhancement()">Enhance with AI</button>
 
+    <button onclick="applyEnhancement()">Enhance with AI</button>
     <button onclick="convert()">Convert to G-code</button>
 
     <label for="gcodeOutput">G-code Output:</label>
@@ -101,9 +114,9 @@
   </div>
 
   <script>
-    const ESP_IP = "http://192.168.4.1"; // Replace with your actual ESP8266 IP
+    const ESP_IP = "http://192.168.4.1";
 
-    document.getElementById('fileInput').addEventListener('change', function (event) {
+    document.querySelector('.button-label input').addEventListener('change', function (event) {
       const reader = new FileReader();
       reader.onload = function () {
         const img = document.getElementById('preview');
