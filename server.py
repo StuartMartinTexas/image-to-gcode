@@ -1,9 +1,29 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, Response
 import subprocess
 import os
 
 app = Flask(__name__, static_folder='static')
 
+# 🔒 --- Basic Auth Setup ---
+USERNAME = 'stuart'
+PASSWORD = 'homeboard'
+
+def check_auth(username, password):
+    return username == USERNAME and password == PASSWORD
+
+def authenticate():
+    return Response(
+        'Authentication Required.', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'}
+    )
+
+@app.before_request
+def require_auth():
+    auth = request.authorization
+    if not auth or not check_auth(auth.username, auth.password):
+        return authenticate()
+
+# 🌐 Routes
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
