@@ -1,19 +1,167 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>Stuart's Home Smart Board</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+    img {
+      max-width: 300px;
+      margin-top: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
 <body>
-  <h3>Upload an Image to Convert to G-code</h3>
-  <input type="file" id="fileInput">
-  <button onclick="upload()">Upload</button>
+  <h2>Stuart's Home Smart Board</h2>
+
+  <input type="file" id="fileInput" accept="image/*">
+  <br>
+  <img id="preview" src="#" alt="Image Preview" style="display:none;">
+  <br>
+
+  <button onclick="convert()">Convert to G-code</button>
+  <br>
+  <label>G-code Output:</label>
+  <textarea id="gcodeOutput" readonly></textarea>
+  <br>
+  <button onclick="sendToESP()">Send to Plotter</button>
+
   <script>
-    async function upload() {
+    const ESP_IP = "http://192.168.4.1"; // Replace with your actual ESP8266 IP
+
+    document.getElementById('fileInput').addEventListener('change', function (event) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const img = document.getElementById('preview');
+        img.src = reader.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    });
+
+    async function convert() {
       const file = document.getElementById('fileInput').files[0];
       const form = new FormData();
       form.append('image', file);
-      const res = await fetch('/process-image', { method: 'POST', body: form });
-      const gcode = await res.text();
-      await fetch('http://ESP_IP_ADDRESS/upload', { method: 'POST', body: gcode });
-      alert('G-code sent to ESP!');
+
+      const response = await fetch('/process-image', { method: 'POST', body: form });
+      const gcode = await response.text();
+      document.getElementById('gcodeOutput').value = gcode;
+    }
+
+    async function sendToESP() {
+      const gcode = document.getElementById('gcodeOutput').value;
+      if (!gcode.trim()) {
+        alert("Please convert an image first.");
+        return;
+      }
+
+      const response = await fetch(`${ESP_IP}/upload`, {
+        method: 'POST',
+        body: gcode,
+        headers: { 'Content-Type': 'text/plain' }
+      });
+
+      if (response.ok) {
+        alert("G-code sent successfully!");
+      } else {
+        alert("Failed to send to ESP8266.");
+      }
     }
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stuart's Home Smart Board</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+    img {
+      max-width: 300px;
+      margin-top: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Stuart's Home Smart Board</h2>
+
+  <input type="file" id="fileInput" accept="image/*">
+  <br>
+  <img id="preview" src="#" alt="Image Preview" style="display:none;">
+  <br>
+
+  <button onclick="convert()">Convert to G-code</button>
+  <br>
+  <label>G-code Output:</label>
+  <textarea id="gcodeOutput" readonly></textarea>
+  <br>
+  <button onclick="sendToESP()">Send to Plotter</button>
+
+  <script>
+    const ESP_IP = "http://192.168.4.1"; // Replace with your actual ESP8266 IP
+
+    document.getElementById('fileInput').addEventListener('change', function (event) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const img = document.getElementById('preview');
+        img.src = reader.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    });
+
+    async function convert() {
+      const file = document.getElementById('fileInput').files[0];
+      const form = new FormData();
+      form.append('image', file);
+
+      const response = await fetch('/process-image', { method: 'POST', body: form });
+      const gcode = await response.text();
+      document.getElementById('gcodeOutput').value = gcode;
+    }
+
+    async function sendToESP() {
+      const gcode = document.getElementById('gcodeOutput').value;
+      if (!gcode.trim()) {
+        alert("Please convert an image first.");
+        return;
+      }
+
+      const response = await fetch(`${ESP_IP}/upload`, {
+        method: 'POST',
+        body: gcode,
+        headers: { 'Content-Type': 'text/plain' }
+      });
+
+      if (response.ok) {
+        alert("G-code sent successfully!");
+      } else {
+        alert("Failed to send to ESP8266.");
+      }
+    }
+  </script>
+</body>
+</html>
+
