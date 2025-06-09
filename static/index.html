@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Stuart's Home Smart Board</title>
   <style>
     body {
@@ -14,20 +15,29 @@
       margin-top: 10px;
     }
 
-   #headerImage {
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px;
-  margin-bottom: 15px;
+    #headerImage {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin-bottom: 15px;
     }
+
     img#preview {
       max-width: 300px;
       margin: 10px auto;
+      display: block;
     }
 
     textarea {
       width: 90%;
       height: 200px;
+      margin-top: 10px;
+      font-family: monospace;
+    }
+
+    input[type="text"] {
+      width: 90%;
+      padding: 8px;
       margin-top: 10px;
     }
 
@@ -35,31 +45,42 @@
       margin: 10px 5px;
       padding: 8px 16px;
       font-size: 14px;
+      cursor: pointer;
+    }
+
+    small {
+      display: block;
+      color: gray;
+      margin-top: -5px;
     }
   </style>
 </head>
 <body>
+
   <img src="/static/banner.jpg" id="headerImage" alt="Smart Board Banner" />
   <h2>Stuart's Smart Board</h2>
   <p><i>“Improve your artistic abilities with technology”</i></p>
 
-<!-- Upload or capture -->
-<label for="fileInput">Upload or Take a Photo:</label><br>
-<input type="file" id="fileInput" accept="image/*" capture="environment"><br>
-<small style="color: gray;">(Choose an image or use your camera)</small><br>
+  <!-- Upload or Capture -->
+  <label for="fileInput">Upload or Take a Photo:</label><br>
+  <input type="file" id="fileInput" accept="image/*" capture="environment"><br>
+  <small>(Choose an image or use your camera)</small><br>
 
-<img id="preview" src="#" alt="Image Preview" style="display:none; max-width: 300px; margin-top: 10px;"><br>
-<button onclick="removeImage()">Remove Image</button><br>
-<label for="aiPrompt">Enhancement Prompt:</label><br>
-<input type="text" id="aiPrompt" placeholder="e.g. redraw as cartoon, cleaner edges"><br>
-  
+  <img id="preview" src="#" alt="Image Preview" style="display:none;"><br>
+  <button onclick="removeImage()">Remove Image</button><br>
+
+  <!-- AI Prompt -->
+  <label for="aiPrompt">Enhancement Prompt:</label><br>
+  <input type="text" id="aiPrompt" placeholder="e.g. redraw as cartoon, cleaner edges"><br>
+
+  <!-- Conversion and Output -->
   <button onclick="convert()">Convert to G-code</button><br>
   <label for="gcodeOutput">G-code Output:</label><br>
   <textarea id="gcodeOutput" readonly></textarea><br>
   <button onclick="sendToESP()">Send to Plotter</button>
 
   <script>
-    const ESP_IP = "http://192.168.4.1"; // Replace with actual ESP8266 IP                             STUART ESP 8266 IP Address HERE
+    const ESP_IP = "http://192.168.4.1"; // 🛠️ Replace with actual ESP8266 IP
 
     document.getElementById('fileInput').addEventListener('change', function (event) {
       const reader = new FileReader();
@@ -75,6 +96,7 @@
 
     async function convert() {
       const file = document.getElementById('fileInput').files[0];
+      const prompt = document.getElementById('aiPrompt').value;
       if (!file) {
         alert("Please choose an image.");
         return;
@@ -82,9 +104,20 @@
 
       const form = new FormData();
       form.append('image', file);
-      const response = await fetch('/process-image', { method: 'POST', body: form });
-      const gcode = await response.text();
-      document.getElementById('gcodeOutput').value = gcode;
+      form.append('prompt', prompt); // 🔄 For future AI-enhanced server support
+
+      try {
+        const response = await fetch('/process-image', {
+          method: 'POST',
+          body: form
+        });
+
+        if (!response.ok) throw new Error("Server error");
+        const gcode = await response.text();
+        document.getElementById('gcodeOutput').value = gcode;
+      } catch (err) {
+        alert("Failed to convert image to G-code.");
+      }
     }
 
     async function sendToESP() {
@@ -94,16 +127,20 @@
         return;
       }
 
-      const response = await fetch(`${ESP_IP}/upload`, {
-        method: 'POST',
-        body: gcode,
-        headers: { 'Content-Type': 'text/plain' }
-      });
+      try {
+        const response = await fetch(`${ESP_IP}/upload`, {
+          method: 'POST',
+          body: gcode,
+          headers: { 'Content-Type': 'text/plain' }
+        });
 
-      if (response.ok) {
-        alert("G-code sent to ESP8266 successfully!");
-      } else {
-        alert("Failed to send G-code to ESP8266.");
+        if (response.ok) {
+          alert("G-code sent to ESP8266 successfully!");
+        } else {
+          alert("Failed to send G-code to ESP8266.");
+        }
+      } catch (err) {
+        alert("ESP8266 is not reachable.");
       }
     }
 
