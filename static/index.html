@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h3>Upload an Image to Convert to G-code</h3>
+  <input type="file" id="fileInput">
+  <button onclick="upload()">Upload</button>
+  <script>
+    async function upload() {
+      const file = document.getElementById('fileInput').files[0];
+      const form = new FormData();
+      form.append('image', file);
+      const res = await fetch('/process-image', { method: 'POST', body: form });
+      const gcode = await res.text();
+      await fetch('http://ESP_IP_ADDRESS/upload', { method: 'POST', body: gcode });
+      alert('G-code sent to ESP!');
+    }
+  </script>
+</body>
+</html>
